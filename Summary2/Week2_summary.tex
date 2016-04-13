@@ -1,0 +1,57 @@
+\documentclass[letterpaper,10pt,draftclsnofoot,onecolumn]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+%\usepackage{upquote}
+
+%\usepackage{balance}
+%\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+%\usepackage{pstricks, pst-node}
+\usepackage[utf8]{inputenc}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+%random comment
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\def\name{Nikhil Kishore}
+
+%pull in the necessary preamble matter for pygments output
+%\input{pygments.tex}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs444 ``Opertating Systems 2''},
+  pdftitle = {CS 444 Week 2: Chapter 3 and 4 Summary},
+  pdfsubject = {CS 444 Week 2 Summary},
+  pdfpagemode = UseNone
+}
+
+\parindent = 0.0 in
+\parskip = 0.2 in
+
+\begin{document}
+
+\section*{Linux Kernel Development, Robert Love}
+\subsection*{Chapter 3 and 4 Summary}
+
+Robert Love, author of Linux Kernel Development (September, 2003) book, explains how to manage processes with threads and forks, which corresponds to process scheduling and how the kernel takes those processes and puts them to work. In chapter three, Love explains the details about how a process is created and its different states, later in chapter 4, process scheduling is introduced and Love compares the Linux Kernel with other operating systems. The author’s purpose in chapters three and four of the book is to give the audience an insight behind the main idea of processes and how important it is for performance of a system. The intended audience for these chapters is students who want to learn about the processes are an important aspect of the Linux Kernel and computer scientist who are interested in learning about process management. 
+
+\end{document}

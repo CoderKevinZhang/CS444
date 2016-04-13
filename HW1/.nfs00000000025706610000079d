@@ -1,0 +1,253 @@
+\documentclass[10pt, draftclsnofoot, onecolumn]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{caption}
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+\usepackage{textcomp} %python code fix
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+
+\usepackage{geometry}
+\geometry{paper=letterpaper, margin={.75in, .75in}}
+\graphicspath{{images/}}
+
+%random comment
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\def\name{Operating System}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  linkcolor = black,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {CS444 ``Operating System''},
+  pdftitle = {Concurrency Assignment1},
+  pdfsubject = {CS444 Concurrency Assignment1 },
+  pdfpagemode = UseNone}
+
+\lstset{
+upquote=true
+backgroundcolor=\color{lbcolor},
+    tabsize=4,    
+%   rulecolor=,
+    language=[GNU]C++,
+        basicstyle=\ttfamily\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=false,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        numbers=left,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.026,0.112,0.095},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+        numberstyle=\color[rgb]{0.205, 0.142, 0.73},
+        upquote=true% ensure that backtick displays correctly
+%        \lstdefinestyle{C++}{language=C++,style=numbers}’.
+}
+
+\parindent = 0.0 in
+\parskip = 0.1 in
+
+\title{Concurrency Write-Up}
+\author{Avant Mathur \\
+		April 11th, 2016 \\
+		Operating System II \\
+		Spring 2016 Term}
+
+
+
+\begin{document}
+
+
+\IEEEaftertitletext{\vspace{-1\baselineskip}\noindent\begin{abstract}
+Producer-consumer program is an exercise to understand concept of concurrency. The program uses number of producer and consumer as in input in the comamand line. Based on it, the program creates threads using pthreads. In the input data representing events are generatored by using mersanne twister. In the end, the results are displayed on the screen.  
+\end{abstract}}
+
+\maketitle
+\pagenumbering{gobble}
+\newpage
+%End of Title Page
+
+
+\subsection{Command Log}
+
+-	mkdir  cs444-087
+
+-   git checkout tagv3.14.26
+
+-	git clone git://git.yoctoproject.org/linux-yocto-3.14
+
+-	qemu-system-i386 -gdb tcp::5500087 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+
+-	Gdb target remote :500087 (on other terminal)
+
+-	cp /scratch/spring2015/files/config-3.14.26-yocto-qemu to \${SRC\_ROOT.config} 
+
+-	qemu-system-i386 -gdb tcp::5500087 -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+
+-	make -j4 all "build kernel"
+
+-	Shutdown -Hh now "shutdown vm"
+
+-   csh environment file
+
+-	Source Environment file
+
+Log command of Concurrency 
+
+-	make
+
+-	gcc -pthread -o Concurrency1 mt19937ar.c Concurrency1.c
+
+-	./Concurrency1 1 1
+
+-	./Concurrency1 4 2
+
+\subsection{Explanation of Flags}
+
+-gdb tcp: It opens a gdb server on the tcp port  [1].
+
+-S: CPU does not start at startup [1]
+
+-nographic: It disable graphical output so that QEMU is a simple command line application [1].
+
+-kernal: To provide the Linux kernel image [1].
+
+-drive: Define a new drive [1].
+
+-enable-kvm: Enable KVM full virtualization support [1].
+
+-net: Indicate that no network devices should be configured. It is used to override the default configuration (‘-net nic -net user’) which is activated if no ‘-net’ options are provided [1].
+
+--no-rebort: Exit instead of rebooting [1].
+
+-usb: Enable the USB driver [1].
+
+-localtime: To let the RTC start at the current local time [1].
+
+--append: To give the kernel command line arguments [1].
+
+\subsection{Concurrency Question}
+\subsubsection{Main Point}
+The concurreny programming exercises helps developing skills for thinking in parallel. This is a critical skill for a programmer, to the point where it is established as a basic requirement for a SW developer in industry. In this assignment, we will learn about pthread, mutex, semaphore, and mersanne twister and how to use them. Learn how to attack producer-consumer problem.
+
+\subsubsection{Approach to the Problem}
+Thing first I did was research on how to solve this producer-consumer problem. By looking at this problem, certain data structures, synchronization constructs, and ideas have to be present in order for solution to be made. In terms of data structures, there needs to be an array or queue to hold all the different items produced or consumed. From, the project description there needs to be a struct called buffer\_item to hold two pieces of information- the value of the item and the consumed time. In terms of synchronization there are going to be multiple consumers and/or producers; each acting as a pthread for a child process. There also need to be a mutex to lock the buffer so that only one producer or consumer thread can access the buffer array at a time. 
+
+Using all of these concepts, the first step was to create to a buffer array and a struct. The array needs to be size of 32 containing buffer\_item type and buffer\_item contains num and time. In terms of global variables there needs to be 3 values for an array head, tail, and size. Head is the first item in an array where is the producer is going to add, tail is the last item in the array where the consumer is going to take from, and size determines how many items are in the array. These variables are used to maintain the array. Finally there is a global mutex for the lock on the array. Next I created producer () and insert\_item (), producer is used to stimulate the action of the producer. Insert\_item is the critical section of a producer thread. Producer () first sleeps based on the project description for 3 to 7 seconds and then tries to acquire the lock. If the look is available create a new item and try to insert using insert\_item. Then, release the lock. Else, if not available block the thread until acquirable. Insert\_item will insert if the size is not 32 (max), insert into the circular array and print the produce item. Similarly, consumer () and remove\_item are created for consumer threads. These two functions do similar operations to producer threads. Lastly the main was created to allow multiple producers and consumers, and mersanne twister was added instead of rdand function.
+
+
+\subsubsection{Correct Solution}
+The way this program was tested was incrementally starting from the producer to the consumer through the main. First step was to show that only one producer can produce at a time starting with one producer and going to five. Next step, is to incorporate the actions of the consumer to make sure that one producer or consumer is allowed in the critical section at a time. At this point the first test case started with one producer and one consumer the simplest case.  Then moving onto more producers than consumers, followed by more consumers than producers, and ending with equal number of producer and consumer. Once all the cases were tested, then the mersanne twister was added in and tested. 
+
+\subsubsection{What did I learn?}
+I learned several new flags of the GDB command which are seems to be useful in running a virtual environment. I had to research about how to use pthread since I have never used it before. The proper use of mutex helped me to understand how the tarks can be run in parallel without much of conflict. 
+
+
+
+
+\begin{table}[H]
+\caption{Version Log Control}
+\label{my-label}
+{%
+\begin{tabular}{|p{17.5cm}|}
+\hline
+commit 01c2f3c8a3502aeed1cbbadaa89d1bcbcf0fb9d2 \\
+Author: Avant Mathur \textless avantmathur2@gmail.com\textgreater\\
+Date:   Sun Apr 10 22:42:15 2016 -0700 \\ \\
+
+    Working on fixing the tex file \\ \hline
+
+\hline
+ commit ad6d04caea41957756e4136bd766a33a752f0245 \\
+ Author: Avant Mathur \textless avantmathur2@gmail.com\textgreater\\
+ Date:   Sat Apr 9 16:36:26 2016 -0700\\ \\
+
+    Fixed Makefile\\ \hline
+
+\hline
+commit 29d40c8e6bacb7a19bbb0f032521f60b54704a6c \\
+Author: Avant Mathur \textless avantmathur2@gmail.com\textgreater\\
+Date:   Sat Apr 9 00:32:48 2016 -0700\\ \\
+
+    fixed Concurrency1.c \\ \hline
+
+\hline
+commit f4fb87140e4fe73925bb7cbc5c09bd4c3dc699fb \\
+Author: Avant Mathur \textless avantmathur2@gmail.com\textgreater\\
+Date:   Wed Apr 6 16:07:13 2016 -0700\\ \\
+
+    add new mt19937ar.c \\ \hline
+	
+\hline
+commit 5283fad1d0ba3db83eb08fade9d6d4a23cb73f9a \\
+Author: Avant Mathur \textless mathura@flip1.engr.oregonstate.edu\textgreater\\
+Date:   Wed Apr 6 16:02:18 2016 -0700 \\
+
+    try \\ \hline
+	
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[H]
+\caption{Work Log}
+\label{my-label}
+{%
+\begin{tabular}{|p{3cm}|p{14cm}|}
+\hline
+April 1st, 2016 & I got my VM working for class. Worked with a friend on how to setup it. \\ \hline
+April 3rd, 2016 & I got started on creating a C file in cs444 directory. It just had basic stuff inside. \\ \hline
+April 6th, 2016 & First version of the producer and consumer functions were implemented. The program didn't run correctly because I had no idea how use mutex properly and other stuff. I had to reseach them. I had tried how to use git log which will be used for version control log later. \\ \hline
+April 8th, 2016 & I got the producer and consumer program working but there was a problem. It will give outputs then after certain amount of time it will stop. I had to solve that problem. \\ \hline
+April 9th, 2016 & The program works correctly now. I have to kill the program to stop producing the outputs. I also got the Makefile to work. \\ \hline
+April 10th, 2016 & I worked on making the tex file in a IEEEtrans format. I spent the 5 hours making. I ran into trouble making the tables for version log control and work log. \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+\pagebreak
+\section{Reference}
+\bibliographystyle{plain}
+%\bibliography{mybib}
+
+[1]{
+    author    = "Fabrice Bellard",
+    title     = "qemu-kvm(1) - Linux man page",
+    url       = "http://linux.die.net/\~{}man/qemu-kvm"
+}
+
+
+
+\end{document}
+

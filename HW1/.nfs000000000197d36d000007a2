@@ -1,0 +1,136 @@
+\documentclass[letterpaper,10pt,draftclsnofoot,onecolumn]{IEEEtran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+%\usepackage{upquote}
+\usepackage{array}
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+\usepackage[utf8]{inputenc}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+%random comment
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\usepackage{hyperref}
+\usepackage{geometry}
+
+\def\name{Sinan Topkaya}
+
+%pull in the necessary preamble matter for pygments output
+%\input{pygments.tex}
+
+%% The following metadata will show up in the PDF properties
+\hypersetup{
+  colorlinks = true,
+  urlcolor = black,
+  pdfauthor = {\name},
+  pdfkeywords = {cs444 ``OS2'' Homework 1},
+  pdftitle = {CS 444 Homework 1: Project and Conquerency},
+  pdfsubject = {CS 444},
+  pdfpagemode = UseNone
+}
+
+\parindent = 0.0 in
+\parskip = 0.2 in
+
+\begin{document}
+
+	\include(gitlog.tex)
+	\begin{titlepage}
+		
+		\begin{center}
+		\bigbreak	
+		\textbf{Project 1 and Conquerency 1}
+		\bigbreak
+		by Sinan Topkaya
+		\smallbreak
+		CS 444 - Spring 2016
+		\end{center}
+		\vfill
+		
+		Abstract: This paper includes information on how to build and work on kernel plus information on choices I made making a multi threded consumer producer program.
+		
+	\end{titlepage}
+
+\section*{Write-up}
+\subsection*{Project 1}
+
+\subsubsection*{Log of commands for Project1} 
+\begin{itemize}
+	\item git init  
+	\item git clone git://gityoctoproject.org/linux-yocto-3.14 
+	\item git checkout -b v3.14.26 
+	\item git tag -l 
+	\item cp .config cp sb-sdk-qemux.ex3 
+	\item source /scratch/opt/environment-setup-i586-linux 
+	\item make -j4 all 
+	\item qemu-system-i386 -gdb tcp::5630 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug" 
+	\item opened another putty session 
+	\item gdb 
+	\item target remote localhost:5630 
+	\item c 
+	\item uname -r 
+\end{itemize}
+
+\subsubsection*{Qemu Command and its flags} 
+\begin{itemize}
+	\item The code: qemu-system-i386 -gdb tcp::5630 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug" 
+	\item -gdb tcp::5630: This flag allows us to debug the program using gdb, we have to connect to localhost 5630 to see what is exactly going on with the running program 
+	\item -S: This option makes qemu launch wait till gdb connection. 
+	\item -nongraphic: Disables grahical putput so that QEMU is a simple command line application.
+	\item -kernel: This option is needed to provide the Linux kernel image.
+	\item -drive: defines the drive. 
+	\item -if=virtio: specifies the controller's PCI. 
+	\item -enable-kvm: Enables KVM full virtualization support. 
+	\item -net none: Indicates that no network devices should be configured. 
+	\item -usb: Enables USB drivers.
+	\item -localtime: Set RTC start at local time. 
+	\item --no-reboot: Exit instead of rebooting. 
+	\item --append: is used to give the kernel command line argument. 
+\end{itemize}
+
+\subsection*{Conqurency 1}
+
+\subsubsection*{Write-up of Concurreny solution}
+
+My implementation of the concurrency problem was done in C language. I have used Mersenne Twister to generate my random numbers. The problem has some contraints such as, while an item is being added or removed from the buffer, the buffer must be in an inconsistent state, I have acheived this through locking my the buffer for the specific thread that has to use it. Also if a consumer thread arrives while buffer is empty, it has to clock until producer adds a new item, I have achieved this by creating a checkempty funtion, this function check if the buffer is empty, and initalizes it to 1 or in other words true if so. Another constraint was that a producer thread should be able to put more items if the buffer is full, I have achieved this by using the same function but in !checkempty format. I have used getrandinit32 funtion for creating my random numbers.
+
+\subsubsection*{Reflection}
+	1. I think the main point was to learn how to use program multi-threaded programs, this assignment refreashed my memory working with them.\\
+	2. Since I did not remember too much, I read and watched few videos on producer-consumer problems. Also I approached the assignment piece by piece I created threads then worked on producer first, once I was sure the thread was doing what it was supposed to do, I continued working on the consumer.\\
+	3. Approaching the problem piece by piece made it much easier. As mentioned above I made sure the producer thread worked right before I started working on the consumer, I have also ran the program multiple times and waited if I am generating correct random numbers or not.\\
+	4. Well I could say I have learned alot about threads. It was actually a really fun assignment to learn more about threads and how to handle them, also thinking about error it might have was really interresting like blocking signals.\\
+
+\subsection*{git log}
+\input{gitlog.tex}
+\subsection*{work log}
+\begin{center}
+\begin{tabular}{ |m{2cm}|m{5cm}| }
+\hline
+When & What \\
+4/4/2016 & Started with Project 1, connected to the os-class and ran the already given bzImage, got familiar with git and build my own version control system.\\
+4/5/2016 & Built kernel using git because last time I could not. Started with latex, but end up removing it.\\
+4/6/2016 & Everything finally worked well with qemu and Project 1 is completely finished.\\
+4/7/2016 & Forgot to commit changes. I started with implementing threads and tested if they were succesfully created\\
+4/8/2016 & Created the producer thread and function, it works fine and started working on the cpnsumer\\
+4/9/2016 & I am having troubles deleting and I will start working on the consumer\\
+4/10/2016 & Worked on Weekly Summaries\\
+4/11/2016 & Working one th consumer thread, the program runs well but needs few fixes. \\
+\hline
+\end{tabular}
+\end{center}
+\end{document}
